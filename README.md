@@ -225,6 +225,8 @@ MIT License — free to use, modify, distribute. **Never commit your real API ke
 
 ## 中文文档
 
+> 🚀 **解决在 DeepSeek Harness 框架上面使用中转站模型或者第三方模型限流问题**
+
 ### ✨ 功能特性
 
 | 功能 | 说明 |
