@@ -1,0 +1,4 @@
+node_modules/
+pool-config.json
+*.bak
+*.bak.*
