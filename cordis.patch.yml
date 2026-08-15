@@ -1,0 +1,13 @@
+- insert:
+    - id: api-key-pool
+      name: dsh-api-key-pool
+      inject: [llm, webServer]
+      config:
+        pools:
+          example-provider:
+            apiKeyEnv: EXAMPLE_API_KEY
+            keys:
+              - sk-your-first-key-here
+              - sk-your-second-key-here
+            cooldownMs: 30000
+        defaultCooldownMs: 30000
