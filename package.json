@@ -1,0 +1,70 @@
+{
+  "name": "dsh-api-key-pool",
+  "version": "0.1.0",
+  "description": "API Key rotation pool for DeepSeek Harness (DSH). Multi-key round-robin, automatic failover on 401/403/429, cooldown & recovery probing, Web UI management panel. | DeepSeek Harness 插件：API Key 自动轮换池，支持多 Key 轮询、失败自动切换、冷却恢复、Web 管理面板。",
+  "type": "commonjs",
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "default": "./lib/client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "LICENSE",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "test": "node --check lib/index.js && node --check lib/client.js && echo 'Syntax OK'",
+    "prepublishOnly": "npm test"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "api-key",
+    "api-key-rotation",
+    "key-pool",
+    "failover",
+    "load-balance",
+    "round-robin",
+    "circuit-breaker",
+    "api-key-management",
+    "llm",
+    "deepseek",
+    "openai",
+    "plugin",
+    "cordis",
+    "小哲",
+    "xiaozhe"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xiaozhe7772222/dsh-api-key-pool.git"
+  },
+  "bugs": {
+    "url": "https://github.com/xiaozhe7772222/dsh-api-key-pool/issues"
+  },
+  "homepage": "https://github.com/xiaozhe7772222/dsh-api-key-pool#readme",
+  "license": "MIT",
+  "author": "xiaozhe7772222",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-llm": "^0.1.0-rc.6",
+    "@deepseek-ai/schemastery": "^3.18.1"
+  }
+}
