@@ -4,10 +4,14 @@
       inject: [llm, webServer]
       config:
         pools:
-          example-provider:
-            apiKeyEnv: EXAMPLE_API_KEY
+          a:
+            apiKeyEnv: A_API_KEY
             keys:
-              - sk-your-first-key-here
-              - sk-your-second-key-here
+              - sk-ufoKFwKS1a8LResbGFvDBVsxDuGBq7jw
+            cooldownMs: 30000
+          stepfun:
+            apiKeyEnv: STEPFUN_API_KEY
+            keys:
+              - 4XU8zXpD92g0fmbo5dVcpuK4YE4iygmJy5MWzrptxZwJiE5oUEYnX4UdordcP63i1
             cooldownMs: 30000
         defaultCooldownMs: 30000
