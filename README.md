@@ -117,46 +117,53 @@ After starting DSH, open **Settings → Plugins → API Key Pool**:
 
 Keys added via the panel persist to `pool-config.json` automatically.
 
-### 🧠 How it works
-
+### 🧠 How it works (v0.3.0)
 ```
 LLM request
    │
    ▼
-┌─────────────────────────────────────────────┐
-│  agent/request waterfall (this plugin)        │
-│  ┌─────────────────────────────────────────┐ │
-│  │ 1. Pick the next healthy key (round-    │ │
-│  │    robin) from the pool                 │ │
-│  │ 2. Inject into process.env[apiKeyEnv]   │ │
-│  │ 3. dsh-credentials-local reads env first │ │
-│  │    → key takes effect immediately, no   │ │
-│  │    config rewrite needed                │ │
-│  └─────────────────────────────────────────┘ │
-└─────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────┐
+│  agent/request waterfall (this plugin v0.3.0)      │
+│  v0.3.0 fix #1: event payload has NO provider      │
+│  → call next() first, read provider from the       │
+│    returned LlmCallConfig                          │
+│  ┌──────────────────────────────────────────────┐ │
+│  │ 1. pickKey(provider) — round-robin healthy key│ │
+│  │ 2. inject process.env[apiKeyEnv]             │ │
+│  │ 3. credentials resolve env first → takes effect│ │
+│  └──────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────┘
    │
    ▼
 Provider API call
    │
-   ├── Success → markSuccess (reset fail count)
+   ├── Success → markSuccess (reset failCount)
    │
-   └── Fail 401/403/429
+   └── Fail 429 (e.g. SenseNova 429001) / 401 / 403 / 5xx ...
         │
         ▼
-┌─────────────────────────────────────────────┐
-│  agent/request-error waterfall (this plugin) │
-│  ┌─────────────────────────────────────────┐ │
-│  │ 1. Mark this key cooling (exp backoff)  │ │
-│  │ 2. Next request automatically switches  │ │
-│  │    to the next key                      │ │
-│  │ 3. When cooldown expires, key goes back │ │
-│  │    into rotation automatically          │ │
-│  └─────────────────────────────────────────┘ │
-└─────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────┐
+│  agent/request-error waterfall (this plugin)      │
+│  v0.3.0 fix #2: no-error-left-behind             │
+│    ANY 4xx/5xx status, or message containing      │
+│    rate/limit/quota/exhaust/timeout/auth → retry  │
+│  v0.3.0 fix #3: return { kind: 'retry' }          │
+│    agent loop re-issues the request (not just     │
+│    mark-failed-and-quit)                          │
+│  ┌──────────────────────────────────────────────┐ │
+│  │ 1. markFailed(currentKey) → cooldown         │ │
+│  │ 2. return { kind: 'retry' }                  │ │
+│  └──────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────┘
+   │
+   ▼  agent loop retries → agent/request again
+   pickKey skips the cooling key → picks next key
+   │
+   ├── key2 again 429 → cooldown → retry → key3 → OK ✅
+   │
+   └── all keys cooling → keeps retrying (wait for cooldown)
 ```
-
-**Key design**: DSH resolves credentials in the order `process.env > .credentials.yaml > .env`. This plugin leverages that — it temporarily rewrites `process.env` in the `agent/request` waterfall for **hot key switching with zero config file changes**.
-
+**Key design**: DSH resolves credentials in the order `process.env > .credentials.yaml > .env`. This plugin leverages that — it temporarily rewrites `process.env` in the `agent/request` waterfall for **hot key switching with zero config file changes**. Since v0.3.0, a failed key not only enters cooldown but also asks the agent loop to **retry with the next key immediately** (previously it only marked the key and the request died).
 ### 🔌 REST API
 
 The plugin registers routes on the DSH web server.
@@ -319,42 +326,51 @@ npx @deepseek-ai/dsh web
 
 Web 面板添加的 Key 会自动持久化到 `pool-config.json`，重启后依然有效。
 
-### 🧠 工作原理
-
+### 🧠 工作原理（v0.3.0）
 ```
 LLM 请求
    │
    ▼
-┌─────────────────────────────────────────────┐
-│  agent/request 瀑布（本插件拦截）              │
-│  ┌─────────────────────────────────────────┐ │
-│  │ 1. 从池中按轮询顺序选一个健康 Key        │ │
-│  │ 2. 注入到 process.env[apiKeyEnv]        │ │
-│  │ 3. dsh-credentials-local 优先读 env →   │ │
-│  │    Key 立即生效，无需改配置文件           │ │
-│  └─────────────────────────────────────────┘ │
-└─────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────┐
+│  agent/request 瀑布（本插件 v0.3.0）               │
+│  v0.3.0 修复1：事件 payload 没有 provider 字段     │
+│  → 先调 next()，从返回的 LlmCallConfig 里取 provider│
+│  ┌──────────────────────────────────────────────┐ │
+│  │ 1. pickKey(provider) 轮询选健康 Key           │ │
+│  │ 2. 注入 process.env[apiKeyEnv]                │ │
+│  │ 3. 凭据解析优先读 env → Key 立即生效          │ │
+│  └──────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────┘
    │
    ▼
 供应商 API 调用
    │
    ├── 成功 → markSuccess（重置失败计数）
    │
-   └── 失败 401/403/429
+   └── 失败 429（如商汤 429001）/ 401 / 403 / 5xx ...
         │
         ▼
-┌─────────────────────────────────────────────┐
-│  agent/request-error 瀑布（本插件拦截）        │
-│  ┌─────────────────────────────────────────┐ │
-│  │ 1. 标记该 Key 进入冷却（指数退避）       │ │
-│  │ 2. 下一次请求自动切换下一个 Key          │ │
-│  │ 3. 冷却到期后 Key 自动回到轮换池         │ │
-│  └─────────────────────────────────────────┘ │
-└─────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────┐
+│  agent/request-error 瀑布（本插件拦截）            │
+│  v0.3.0 修复2：宁多勿漏                           │
+│    任何 4xx/5xx 状态码，或消息含 rate/limit/quota/ │
+│    exhaust/timeout/auth 等关键词 → 均判定可重试    │
+│  v0.3.0 修复3：返回 { kind: 'retry' }              │
+│    agent loop 收到后重新发起请求（不再直接退出！）  │
+│  ┌──────────────────────────────────────────────┐ │
+│  │ 1. markFailed(当前key) → 进入冷却             │ │
+│  │ 2. return { kind: 'retry' }                  │ │
+│  └──────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────┘
+   │
+   ▼  agent loop 重试 → 再次进入 agent/request
+   pickKey 跳过冷却中的 key → 选中下一个 key
+   │
+   ├── key2 也 429 → 标记冷却 → retry → key3 → 成功 ✅
+   │
+   └── 全部 key 冷却 → 继续重试（等冷却），日志预警
 ```
-
-**关键设计**：DSH 的凭据解析优先级是 `process.env > .credentials.yaml > .env`，本插件利用这一机制，在 `agent/request` 瀑布中临时改写 `process.env`，实现**零配置文件改动的 Key 热切换**。
-
+**关键设计**：DSH 的凭据解析优先级是 `process.env > .credentials.yaml > .env`，本插件利用这一机制，在 `agent/request` 瀑布中临时改写 `process.env`，实现**零配置文件改动的 Key 热切换**。v0.3.0 起，失败的 Key 不仅进入冷却，还会让 agent loop **立刻换下一个 Key 重试**（此前只是标记了故障但请求直接失败，等于白轮换）。
 ### 🔌 REST API
 
 插件在 DSH webServer 上注册以下路由：
