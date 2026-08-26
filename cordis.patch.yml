@@ -7,11 +7,11 @@
           a:
             apiKeyEnv: A_API_KEY
             keys:
-              - sk-ufoKFwKS1a8LResbGFvDBVsxDuGBq7jw
+              - sk-your-first-key
             cooldownMs: 30000
           stepfun:
             apiKeyEnv: STEPFUN_API_KEY
             keys:
-              - 4XU8zXpD92g0fmbo5dVcpuK4YE4iygmJy5MWzrptxZwJiE5oUEYnX4UdordcP63i1
+              - sk-your-second-key
             cooldownMs: 30000
         defaultCooldownMs: 30000
