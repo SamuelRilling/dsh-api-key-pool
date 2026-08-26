@@ -38,39 +38,44 @@ Multi-key round-robin · Automatic failover · Cooldown & recovery · Web UI pan
 
 ### 📦 Installation
 
-```bash
-# Clone the repo
-git clone https://github.com/xiaozhe7772222/dsh-api-key-pool.git
-cd dsh-api-key-pool
+The plugin is a DSH **bundle**. DSH only loads a bundle when its package is **resolvable from the profile's `node_modules`** and it is listed in `dsh.profile.bundles`. Copying files into the profile's `plugins/` directory alone does **not** load it.
 
-# Copy into your DSH profile's plugins directory
-mkdir -p ~/.dsh/profiles/web/plugins/dsh-api-key-pool
-cp -r lib package.json cordis.patch.yml ~/.dsh/profiles/web/plugins/dsh-api-key-pool/
-```
-
-Then declare the bundle in `~/.dsh/profiles/web/package.json`:
+Add it to `~/.dsh/profiles/web/package.json` — both as a dependency and as a bundle:
 
 ```json
 {
+  "name": "dsh-profile-web",
+  "private": true,
+  "dependencies": {
+    "dsh-api-key-pool": "github:xiaozhe7772222/dsh-api-key-pool"
+  },
   "dsh": {
     "profile": {
       "bundles": [
-        {
-          "name": "dsh-api-key-pool",
-          "platform": ["web"],
-          "optional": false
-        }
+        "dsh-api-key-pool"
       ]
     }
   }
 }
 ```
 
-Restart DSH:
+Install the dependency, then restart:
 
 ```bash
+cd ~/.dsh/profiles/web
+pnpm install        # or: npx @deepseek-ai/dsh plugin --profile web install
 npx @deepseek-ai/dsh web
 ```
+
+> **Note:** never edit `~/.dsh/profiles/web/package.json` with an editor that adds a UTF-8 BOM (e.g. some Windows editors). DSH parses it with `JSON.parse`, and a leading BOM crashes startup with `Unexpected token '\uFEFF'`.
+
+**Local development.** Point the dependency at a local copy (holding `lib`, `package.json`, `cordis.patch.yml`), run `pnpm install` to link it into `node_modules`, then restart:
+
+```json
+"dependencies": { "dsh-api-key-pool": "file:./plugins/dsh-api-key-pool" }
+```
+
+After starting DSH, open **Settings → Plugins → the “Configurable” tab → API Key 池**.
 
 ### ⚙️ Configuration
 
@@ -247,39 +252,44 @@ MIT License — free to use, modify, distribute. **Never commit your real API ke
 
 ### 📦 安装
 
-```bash
-# 克隆仓库
-git clone https://github.com/xiaozhe7772222/dsh-api-key-pool.git
-cd dsh-api-key-pool
+本插件是一个 DSH **bundle**。DSH 只有在包能从 profile 的 `node_modules` 解析、且被列入 `dsh.profile.bundles` 时才会加载它。仅仅把文件拷贝到 profile 的 `plugins/` 目录**不会**被加载。
 
-# 拷贝到 DSH profile 的 plugins 目录
-mkdir -p ~/.dsh/profiles/web/plugins/dsh-api-key-pool
-cp -r lib package.json cordis.patch.yml ~/.dsh/profiles/web/plugins/dsh-api-key-pool/
-```
-
-然后在 `~/.dsh/profiles/web/package.json` 的 `dsh.profile.bundles` 中声明：
+在 `~/.dsh/profiles/web/package.json` 中同时声明为依赖和 bundle：
 
 ```json
 {
+  "name": "dsh-profile-web",
+  "private": true,
+  "dependencies": {
+    "dsh-api-key-pool": "github:xiaozhe7772222/dsh-api-key-pool"
+  },
   "dsh": {
     "profile": {
       "bundles": [
-        {
-          "name": "dsh-api-key-pool",
-          "platform": ["web"],
-          "optional": false
-        }
+        "dsh-api-key-pool"
       ]
     }
   }
 }
 ```
 
-重启 DSH：
+安装依赖并重启：
 
 ```bash
+cd ~/.dsh/profiles/web
+pnpm install        # 或：npx @deepseek-ai/dsh plugin --profile web install
 npx @deepseek-ai/dsh web
 ```
+
+> **注意：** 请不要用会写入 UTF-8 BOM 的编辑器（如某些 Windows 编辑器）保存 `~/.dsh/profiles/web/package.json`。DSH 用 `JSON.parse` 解析它，开头的 BOM 会导致启动崩溃 `Unexpected token '\uFEFF'`。
+
+**本地开发**：把依赖指向本地副本（包含 `lib`、`package.json`、`cordis.patch.yml`），运行 `pnpm install` 链接进 `node_modules`，然后重启：
+
+```json
+"dependencies": { "dsh-api-key-pool": "file:./plugins/dsh-api-key-pool" }
+```
+
+启动后，打开 **设置 → 插件配置 → “可配置”标签 → API Key 池**。
 
 ### ⚙️ 配置说明
 
