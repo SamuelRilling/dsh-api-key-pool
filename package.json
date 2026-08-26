@@ -1,7 +1,7 @@
 {
   "name": "dsh-api-key-pool",
   "description": "API Key rotation pool for DeepSeek Harness: multiple keys per provider, weighted round-robin selection, automatic failover on 401/429/403, cooldown and recovery probing, usage statistics.",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "type": "commonjs",
   "main": "lib/index.js",
   "exports": {

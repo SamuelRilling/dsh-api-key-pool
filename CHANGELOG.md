@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.1] - 2026-08-26
+### Fixed
+- **Web 设置卡片导致 DSH 启动崩溃（关键修复）**：`lib/client.js` 把卡片注册进 `settings.plugin.item` 槽位时，
+  漏掉了该 keyed 槽位必需的 `options.key`，DSH 加载器因此报 `keyed slot "settings.plugin.item" requires options.key`
+  并中止插件加载。现在补上 `key: 'api-key-pool'`，同时移除 `id` / `order` / `label` —— 这些属于
+  `settings.section` 列表槽位，对 keyed 槽位无效。
+- **设置卡片之前不会显示**：`settings.plugin.item` 标签页只渲染"宿主机已提供服务"的命名空间对应的卡片。
+  插件此前从未在宿主机注册 `api-key-pool` 命名空间，导致即便补上 `key` 卡片也不会出现。
+  现在在 `lib/index.js` 通过 `ctx.inject(['settings'])` 注册该命名空间（空 schema + 空 base 作为"已提供服务"标记，
+  插件真实配置仍由自身 REST API 管理）。
+### Changed
+- 版本号从 0.3.0 升至 0.3.1
+
 ## [0.3.0] - 2026-08-17
 ### Fixed
 - **agent/request 瀑布读取 provider 错误（关键修复）**：payload 中没有 provider 字段（只有 `{ turn, step, signal }`），
