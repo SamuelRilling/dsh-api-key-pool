@@ -1,7 +1,7 @@
 - insert:
     - id: api-key-pool
       name: dsh-api-key-pool
-      inject: [llm, webServer]
+      inject: [llm, webServer, settings]
       config:
         pools:
           a:
